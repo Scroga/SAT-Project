@@ -47,7 +47,7 @@ def encode(instance):
     # given the instance, create a cnf formula, i.e. a list of lists of integers
     # also return the total number of variables used
 
-    # each eadge in the graph has a variable that indicates whether or not the edge is in cycle
+    # each edge in the graph has a variable that indicates whether or not the edge is in cycle
     # each variable is represented by an integer, varaibles are numbered from 1
 
     required_edges, k = instance
