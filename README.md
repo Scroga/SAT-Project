@@ -19,19 +19,23 @@ An example of a valid input format is:
 
 where the first line is the number of vertices in th graph. Second line is k (maximum length of the cycle). The other lines represent the edges of the graph. The first two numbers of the lines are the indecies of the vertices that form the edge, the third number of the line is a value 1 or 0, True or False, which represents whether the edge is required (in a subset F).
 
-
-I dont have it yet
+if the cycle exists, the output will be the edges in the found cycle and their indices
 
 ```
-I dont have it yet
+Cycle contains edges:
+(0, 1):  index 1
+(0, 2):  index 2
+(1, 3):  index 4
+(2, 3):  index 5
 ```
 
 ## Encoding
 
 I dont have it yet
 
-## User documentation
 
+
+## User documentation
 
 Basic usage: 
 ```
@@ -48,7 +52,12 @@ Command-line options:
 
 ## Example instances
 
-I dont have it yet
+* `input-5.in`: A simple graph containing 5 vertices and having a cycle of length less than or equal to 4 edges.
+* `input-6-unsat.in`: A simple graph containing 5 vertices, doesnt contain a cycle of length less than or equal to 6 edges.
+* `input-7.in`: Slightly more complex graph that contain 7 vertices and cycle of lenght less than or equal to 5 edges.
+* `input-7-unsat.in`: Graph in the shape of a star, doesnt contain any cycles. 
+* 
+* `input-   .in`: Here will be more complex graphs
 
 ## Experiments
 

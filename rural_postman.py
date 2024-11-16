@@ -60,16 +60,17 @@ def encode(instance):
     
     # create variables for edges 
     # variable i corresponds to edge i in the graph being part of the solution
-    edge_to_var = {edge: i + 1 for i, edge in enumerate(EDGES)}
-    variables = list(edge_to_var.values())
+    global EDGE_TO_VAR
+    EDGE_TO_VAR = {edge: i + 1 for i, edge in enumerate(EDGES)}
+    variables = list(EDGE_TO_VAR.values())
     nr_vars = len(variables)
 
     # each required edge must be included in cnf
     if DEBUG : cnf.append("Add required edges")
     if len(required_edges) > 0:
         for edge in required_edges:
-            if edge in edge_to_var:
-                cnf.append([edge_to_var[edge], 0])
+            if edge in EDGE_TO_VAR:
+                cnf.append([EDGE_TO_VAR[edge], 0])
 
     # generate clauses to ensure no more than k edges are in cycle
     # we do this by adding clauses that prevent any combination of k + 1 edges from all being True
@@ -82,29 +83,27 @@ def encode(instance):
 
     # ensures connectivity
     # if an edge is included in a cycle, ensure that the nodes connected by that edge are reachable
-    if DEBUG : cnf.append("Ensure global connectivity") # I didnt test this method
+    if DEBUG : cnf.append("Ensure connectivity")
     for edge in EDGES:
-        edge_var = edge_to_var[edge]
+        edge_var = EDGE_TO_VAR[edge]
         u, v = edge
-        connected_edges_u = [edge_to_var[e] for e in EDGES if u in e and e != edge]
-        connected_edges_v = [edge_to_var[e] for e in EDGES if v in e and e != edge]
+        connected_edges_u = [EDGE_TO_VAR[e] for e in EDGES if u in e and e != edge]
+        connected_edges_v = [EDGE_TO_VAR[e] for e in EDGES if v in e and e != edge]
         cnf.append([-edge_var] + connected_edges_u + [0])
         cnf.append([-edge_var] + connected_edges_v + [0])
 
     # esures that each edge has at most two neighbors in the cycle
     if DEBUG : cnf.append("At most two neighbors")
     for edge in EDGES:
-        neighbors = [ edge_to_var[neighbor] for neighbor in get_neighbors(edge)]
+        neighbors = [ EDGE_TO_VAR[neighbor] for neighbor in get_neighbors(edge)]
         if len(neighbors) > 2:
             for n in range(3, len(neighbors) + 1):
                 for comb in combinations(neighbors, n):
-                    clause = [-edge_to_var[edge]] + [ -var for var in comb]
+                    clause = [-EDGE_TO_VAR[edge]] + [ -var for var in comb]
                     cnf.append(clause + [0])
 
 
-    # conditions i should encode?
-    # TODO: 1. closed cycle requirement
-    # TODO: 2. for each vertex in a cycle, the degree must be exactly 2?
+    # TODO: 1. Detect if the cycle has more than two components
 
     return cnf, nr_vars
 
@@ -142,10 +141,11 @@ def print_result(result):
     print("##################################################################")
     print()
 
-    print(model)
-
-    # TODO: print the edges in the cycle
-    # TODO: print if this cycle is simple?
+    cycle = [ (edge, var) for edge, var in EDGE_TO_VAR.items() if var in model ]
+    print("Cycle contains edges: ")
+    for edge, var in cycle:
+        print(f"{edge}:  index {var}")
+    print()
 
 if __name__ == "__main__":
 
@@ -205,6 +205,3 @@ if __name__ == "__main__":
 
     # Interpret the result and print it in a human-readable format
     print_result(result)
-
-# TODO: Finish print_result() method
-# TODO: Add more input files
