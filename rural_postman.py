@@ -43,6 +43,11 @@ def get_neighbors(edge):
             neighbors.append(other_edge)
     return neighbors
 
+def print_cnf(cnf):
+    if DEBUG:
+        for clause in cnf:
+            print(f"{clause} \n")
+
 def encode(instance):
     # given the instance, create a cnf formula, i.e. a list of lists of integers
     # also return the total number of variables used
@@ -67,25 +72,37 @@ def encode(instance):
 
     # generate clauses to ensure no more than k edges are in cycle
     # we do this by adding clauses that prevent any combination of k + 1 edges from all being True
-    if DEBUG : cnf.append("Add combinations")
+    if DEBUG : cnf.append("Prevent any combination of k + 1 edges")
     if nr_vars > k:
         for i in range(1, nr_vars - k):
             for comb in combinations(variables, k + i):
                 clause = [ -var for var in comb]
                 cnf.append(clause + [0])
 
-    # ensures local connectivity, if an edge is included in a cycle, at least two of its neighbors must also be included
-    if DEBUG : cnf.append("Add pairs of neighbors")
+    # ensures local connectivity
+    # if an edge is included in a cycle, at least two of its neighbors must also be included
+    if DEBUG : cnf.append("At least two neighbors")
     for edge in EDGES:
-        neighbors = get_neighbors(edge)
-        if len(neighbors) >= 2:
+        neighbors = [ edge_to_var[neighbor] for neighbor in get_neighbors(edge)]
+        if len(neighbors) > 2:
             clause_pairs = []
             for i in range(len(neighbors)):
                 for j in range(i + 1, len(neighbors)):
-                    clause_pairs.append([-edge_to_var[edge], edge_to_var[neighbors[i]], edge_to_var[neighbors[j]], 0])
+                    clause_pairs.append([-edge_to_var[edge], neighbors[i], neighbors[j], 0])
             cnf.extend(clause_pairs)
-    
-    # ensure global connectivity, if an edge is included in a cycle, ensure that the nodes connected by that edge are reachable
+
+    # esures that each edge has at most two neighbors in the cycle
+    if DEBUG : cnf.append("At most two neighbors")
+    for edge in EDGES:
+        neighbors = [ edge_to_var[neighbor] for neighbor in get_neighbors(edge)]
+        if len(neighbors) > 2:
+            for n in range(3, len(neighbors) + 1):
+                for comb in combinations(neighbors, n):
+                    clause = [-edge_to_var[edge]] + [ -var for var in comb]
+                    cnf.append(clause + [0])
+
+    # ensure global connectivity
+    # if an edge is included in a cycle, ensure that the nodes connected by that edge are reachable
     if DEBUG : cnf.append("Ensure global connectivity") # I didnt test this method
     for edge in EDGES:
         if edge in edge_to_var:
@@ -97,9 +114,8 @@ def encode(instance):
             cnf.append([-edge_var] + connected_edges_v + [0])
 
     # conditions i should encode?
-    # TODO: 1. every edge in the cycle must be connected to exactly two other edges in the cycle
-    # TODO: 2. closed cycle requirement
-    # TODO: 3. for each vertex in a cycle, the degree must be exactly 2?
+    # TODO: 1. closed cycle requirement
+    # TODO: 2. for each vertex in a cycle, the degree must be exactly 2?
 
     return cnf, nr_vars
 
@@ -192,7 +208,7 @@ if __name__ == "__main__":
     cnf, nr_vars = encode(instance)
 
     if DEBUG:
-        print(cnf)
+        print_cnf(cnf)
         exit()
 
     # call the SAT solver and get the result
