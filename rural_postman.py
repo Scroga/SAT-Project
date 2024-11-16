@@ -66,16 +66,17 @@ def encode(instance):
 
     # each required edge must be included in cnf
     if DEBUG : cnf.append("Add required edges")
-    for edge in required_edges:
-        if edge in edge_to_var:
-            cnf.append([edge_to_var[edge], 0])
+    if len(required_edges) > 0:
+        for edge in required_edges:
+            if edge in edge_to_var:
+                cnf.append([edge_to_var[edge], 0])
 
     # generate clauses to ensure no more than k edges are in cycle
     # we do this by adding clauses that prevent any combination of k + 1 edges from all being True
     if DEBUG : cnf.append("Prevent any combination of k + 1 edges")
     if nr_vars > k:
-        for i in range(1, nr_vars - k):
-            for comb in combinations(variables, k + i):
+        for i in range(k + 1, len(EDGES) + 1):
+            for comb in combinations(variables, i):
                 clause = [ -var for var in comb]
                 cnf.append(clause + [0])
 
@@ -84,12 +85,21 @@ def encode(instance):
     if DEBUG : cnf.append("At least two neighbors")
     for edge in EDGES:
         neighbors = [ edge_to_var[neighbor] for neighbor in get_neighbors(edge)]
-        if len(neighbors) > 2:
+        edge_var = edge_to_var[edge]
+
+        if len(neighbors) == 2:
+            # for edges with exactly two neighbors, both neighbors must be included if the edge is included
+                cnf.append([-edge_var, neighbors[0], 0])
+                cnf.append([-edge_var, neighbors[1], 0])
+        elif len(neighbors) > 2:
             clause_pairs = []
             for i in range(len(neighbors)):
                 for j in range(i + 1, len(neighbors)):
                     clause_pairs.append([-edge_to_var[edge], neighbors[i], neighbors[j], 0])
             cnf.extend(clause_pairs)
+        else:
+            # edge with less than two neighbors cannot be part of the cycle
+            cnf.append([-edge_var, 0])
 
     # esures that each edge has at most two neighbors in the cycle
     if DEBUG : cnf.append("At most two neighbors")
@@ -101,17 +111,17 @@ def encode(instance):
                     clause = [-edge_to_var[edge]] + [ -var for var in comb]
                     cnf.append(clause + [0])
 
-    # ensure global connectivity
-    # if an edge is included in a cycle, ensure that the nodes connected by that edge are reachable
-    if DEBUG : cnf.append("Ensure global connectivity") # I didnt test this method
-    for edge in EDGES:
-        if edge in edge_to_var:
-            edge_var = edge_to_var[edge]
-            u, v = edge
-            connected_edges_u = [edge_to_var[e] for e in EDGES if u in e and e != edge]
-            connected_edges_v = [edge_to_var[e] for e in EDGES if v in e and e != edge]
-            cnf.append([-edge_var] + connected_edges_u + [0])
-            cnf.append([-edge_var] + connected_edges_v + [0])
+    # # ensure global connectivity
+    # # if an edge is included in a cycle, ensure that the nodes connected by that edge are reachable
+    # if DEBUG : cnf.append("Ensure global connectivity") # I didnt test this method
+    # for edge in EDGES:
+    #     edge_var = edge_to_var[edge]
+    #     u, v = edge
+    #     connected_edges_u = [edge_to_var[e] for e in EDGES if u in e and e != edge]
+    #     connected_edges_v = [edge_to_var[e] for e in EDGES if v in e and e != edge]
+    #     cnf.append([-edge_var] + connected_edges_u + [0])
+    #     cnf.append([-edge_var] + connected_edges_v + [0])
+
 
     # conditions i should encode?
     # TODO: 1. closed cycle requirement
