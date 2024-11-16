@@ -7,13 +7,14 @@ The Rural Postman problem involves finding a cycle in a graph that efficiently c
 An example of a valid input format is:
 
 ```
-4
+5
 4
 0 1 1
 0 2 0
 1 2 0
 1 3 0
 2 3 1
+2 4 0
 ```
 
 where the first line is the number of vertices in th graph. Second line is k (maximum length of the cycle). The other lines represent the edges of the graph. The first two numbers of the lines are the indecies of the vertices that form the edge, the third number of the line is a value 1 or 0, True or False, which represents whether the edge is required (in a subset F).
