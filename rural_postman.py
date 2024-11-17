@@ -8,7 +8,7 @@ def load_instance(input_file_name):
     global VERTICES, EDGES
     VERTICES = []
     EDGES = []
-    required_edges = set()
+    required_edges = []
 
     with open(input_file_name, "r") as file:
         nr_vertices = int(next(file))    # first line is the number of vertices in graph 
@@ -20,8 +20,10 @@ def load_instance(input_file_name):
 
             EDGES.append(edge)
             if int(required) == 1:    # add required edges (subset F)
-                required_edges.add(edge)
+                required_edges.append(edge)
     
+    VERTICES = [ v for v in range(0, nr_vertices)]
+
     return (required_edges, k)
 
 def combinations(iterable, r):
@@ -52,9 +54,6 @@ def encode(instance):
     # given the instance, create a cnf formula, i.e. a list of lists of integers
     # also return the total number of variables used
 
-    # each edge in the graph has a variable that indicates whether or not the edge is in cycle
-    # each variable is represented by an integer, varaibles are numbered from 1
-
     required_edges, k = instance
     cnf = []
     
@@ -81,9 +80,9 @@ def encode(instance):
                 clause = [ -var for var in comb]
                 cnf.append(clause + [0])
 
-    # ensures connectivity
+    # ensures local connectivity
     # if an edge is included in a cycle, ensure that the nodes connected by that edge are reachable
-    if DEBUG : cnf.append("Ensure connectivity")
+    if DEBUG : cnf.append("Ensure local connectivity")
     for edge in EDGES:
         edge_var = EDGE_TO_VAR[edge]
         u, v = edge
@@ -102,8 +101,23 @@ def encode(instance):
                     clause = [-EDGE_TO_VAR[edge]] + [ -var for var in comb]
                     cnf.append(clause + [0])
 
-
-    # TODO: 1. Detect if the cycle has more than two components
+    # ensures global connectivity
+    # picks any required edge and creates negative clauses for each edge that cannot be reached from the edge  
+    if DEBUG : cnf.append("Ensure global connectivity")
+    if len(required_edges) > 0:
+        queue = [ required_edges[0] ] 
+        visited = []
+        # find unreachable edges by BFS
+        while queue:
+            current = queue.pop(0)
+            for neighbor in get_neighbors(current):
+                if neighbor not in visited:
+                    visited.append(neighbor)
+                    queue.append(neighbor)
+        # create negative clauses with unreachable edges
+        for edge in EDGES:
+            if edge not in visited:
+                cnf.append([-EDGE_TO_VAR[edge], 0])
 
     return cnf, nr_vars
 
@@ -154,7 +168,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-i",
         "--input",
-        default="input.in",
+        default="generated_graph.in",
         type=str,
         help=(
             "The instance file."
