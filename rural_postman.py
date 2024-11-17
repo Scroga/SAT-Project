@@ -147,7 +147,7 @@ def print_result(result):
             vars = line.split(" ")
             vars.remove("v")
             model.extend(int(v) for v in vars)      
-    model.remove(0) # 0 is the end of the model, just ignore it
+    #model.remove(0) # 0 is the end of the model, just ignore it
 
     print()
     print("##################################################################")
