@@ -2,7 +2,9 @@
 
 ## Problem description
 
-The Rural Postman problem involves finding a cycle in a graph that efficiently covers specific edges while adhering to certain limitations. Specifically, given an undirected graph with a set of nodes and edges, along with a subset F of required edges, the challenge is to determine if there exists a cycle that includes every edge in F, uses at most k edges in total, and allows nodes to be revisited (although, each edge can only occur once in the cycle). More information about the Rural Postman problem can be found [online](https://en.wikipedia.org/wiki/Chinese_postman_problem).
+The Rural Postman problem involves finding a cycle in a graph that efficiently covers specific edges while adhering to certain limitations. 
+Specifically, given an undirected graph $G$ with a set of nodes and edges, along with a subset $F$ of required edges, the challenge is to determine 
+if there exists a cycle that includes every edge in $F$, uses at most $k$ edges in total. More information about the Rural Postman problem can be found [online](https://en.wikipedia.org/wiki/Chinese_postman_problem).
 
 An example of a valid input format is:
 
@@ -17,7 +19,9 @@ An example of a valid input format is:
 2 4 0
 ```
 
-where the first line is the number of vertices in th graph. Second line is k (maximum length of the cycle). The other lines represent the edges of the graph. The first two numbers of the lines are the indecies of the vertices that form the edge, the third number of the line is a value 1 or 0, True or False, which represents whether the edge is required (in a subset F).
+where the first line is the number of vertices in th graph. Second line is k (maximum length of the cycle). 
+The other lines represent the edges of the graph. The first two numbers of the lines are the indecies of the vertices 
+that form the edge, the third number of the line is a value 1 or 0, True or False, which represents whether the edge is required (in a subset F).
 
 if the cycle exists, the output will be the edges in the found cycle and their indices
 
@@ -30,9 +34,19 @@ Cycle contains edges:
 ```
 
 ## Encoding
+The problem is encoded using variables, where each edge in the graph is represented by a variable that indicates whether or not the edge is in a cycle. Each variable is represented by an integer, and variables are numbered starting from 1.
 
-I dont have it yet
+To represent the decision problem of determining whether there is a cycle of length less than or equal to $k$ in the graph $G$ that contains every edge in $F$ the graph, we use the following constraints:
 
+- The cycle must include all edges from $F$, so all variables corresponding to edges in $F$ must be set to $True$ in the CNF.
+
+- The cycle must contain no more than $k$ edges, so all combinations of more than $k$ edges are not allowed.
+
+- All edges in the cycle must have at least two neighboring edges (each of its vertices must have a degree of at least 2); otherwise, the edge cannot be part of the cycle.
+
+- All edges in the cycle must have no more than two neighboring edges. Any combination of more than two neighbors is not allowed to be true in the CNF.
+
+- All edges form the subset $F$ must be in the same component.
 
 
 ## User documentation
@@ -50,15 +64,49 @@ Command-line options:
 * `-s SOLVER`, `--solver SOLVER` : The SAT solver to be used.
 *  `-v {0,1}`, `--verb {0,1}` :  Verbosity of the SAT solver used.
 
+
+Additionally, the project repository contains Python file `graph_generater.py`, which generates a complete graph with $n$ vertices. This simple script writes the graph in the required format for the `rural_postaman.py` file. The subset $F$ will contain 2 edges (the first generated edge and the last generated edge), and the $k$ will be set by the user.
+
+Basic usage: 
+```
+graph_generater.py [-h] [-n INT] [-k INT] [-o OUTPUT]
+```
+
+Command-line options:
+
+* `-h`, `--help` : Show a help message and exit.
+* `-n INT`, `--nr_nodes INt` : The number of vertices. Default: 4.
+* `-k INT`, : Max. number of edges in the cycle. Default: 4.
+* `-o OUTPUT`, `--output OUTPUT` : Output file for the script `rural_postman.py`.
+
 ## Example instances
 
 * `input-5.in`: A simple graph containing 5 vertices and having a cycle of length less than or equal to 4 edges.
-* `input-6-unsat.in`: A simple graph containing 5 vertices, doesnt contain a cycle of length less than or equal to 6 edges.
-* `input-7.in`: Slightly more complex graph that contain 7 vertices and cycle of lenght less than or equal to 5 edges.
+* `input-6-unsat.in`: A simple graph containing 6 vertices, doesnt contain a cycle of length less than or equal to 6 edges.
 * `input-7-unsat.in`: Graph in the shape of a star, doesnt contain any cycles. 
-* 
-* `input-   .in`: Here will be more complex graphs
+* `input-7.in`: Slightly more complex graph that contain 7 vertices.
+* `input-11.in`: Complex multiple component graph that contain 11 vertices. 
+* `input-hard.in`: Completed graph with 10 vertices and 45 edges.
 
 ## Experiments
 
-I dont have it yet
+Experiments were run on AMD Ryzen 9 5900HX and 16 GB RAM on Ubuntu inside WSL2 (Windows 11).
+
+We focus on the graph generated by the `graph_generater.py` script. The graph will have only two edges, but we aim to test how the number of vertices in the complete graph and $k$ affect the runtime of the SAT solver.
+
+
+* `X` - process was terminated
+* `U` - unsovable
+
+| Vertex count | 2  | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+| :---:        |:----:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| 2            |`U` |`U`|`U`|`U`|`U`|`U`|`U` |`U`|`U`|
+| 3        |:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:--:|
+| :---:        |:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:--:|
+| :---:        |:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:--:|
+
+
+![A plot of the results](----)
+
+some conclusion
+
